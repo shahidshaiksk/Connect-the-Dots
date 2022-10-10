@@ -28,6 +28,10 @@ class Data:
         self.font = pygame.font.Font("freesansbold.ttf", 32)
 
 
+def play_music():
+    pygame.mixer.music.load("music.mp3")
+    pygame.mixer.music.play(-1)
+
 def show_scores(data):
     text = data.font.render(str(data.scores[0]), True, data.colors[0], (250, 237, 205))
     textRect = text.get_rect()
@@ -282,6 +286,7 @@ def show_result(data):
 
 
 def gameplay():
+    play_music()
     data = Data(k)
     draw_structure()
     show_scores(data)
