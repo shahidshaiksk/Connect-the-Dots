@@ -21,7 +21,7 @@ class Data:
         self.horizontal = numpy.array([[0] * (size - 1)] * size)
         self.cells = numpy.array([[0] * (size - 1)] * (size - 1))
         self.counter = 0
-        self.scores = [0]*2
+        self.scores = [0] * 2
         self.playing = 0
         self.player_change = False
         self.colors = ((192, 23, 96), (37, 89, 151))
@@ -31,6 +31,7 @@ class Data:
 def play_music():
     pygame.mixer.music.load("music.mp3")
     pygame.mixer.music.play(-1)
+
 
 def show_scores(data):
     text = data.font.render(str(data.scores[0]), True, data.colors[0], (250, 237, 205))
@@ -44,7 +45,7 @@ def show_scores(data):
 
 
 def show_current_player(data):
-    text = data.font.render("P"+str(data.playing+1), True, data.colors[data.playing], (250, 237, 205))
+    text = data.font.render("P" + str(data.playing + 1), True, data.colors[data.playing], (250, 237, 205))
     text_rect = text.get_rect()
     text_rect.center = (400, 60)
     screen.blit(text, text_rect)
