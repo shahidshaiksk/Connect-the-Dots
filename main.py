@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 import numpy
 
@@ -13,19 +15,22 @@ pygame.display.set_icon(icon)
 k = 11
 change = 400 // (k - 1)
 sensitivity = change // 5
+font = pygame.font.Font("freesansbold.ttf", 32)
+font1 = pygame.font.Font("freesansbold.ttf", 48)
+scores_pos = ((80, 230), (80, 290), (80, 350), (80, 410))
 
 
 class Data:
-    def __init__(self, size):
+    def __init__(self, size, num_of_players):
         self.vertical = numpy.array([[0] * size] * (size - 1))
         self.horizontal = numpy.array([[0] * (size - 1)] * size)
         self.cells = numpy.array([[0] * (size - 1)] * (size - 1))
         self.counter = 0
-        self.scores = [0] * 2
+        self.num_of_players = num_of_players
+        self.scores = [0] * num_of_players
         self.playing = 0
         self.player_change = False
-        self.colors = ((192, 23, 96), (37, 89, 151))
-        self.font = pygame.font.Font("freesansbold.ttf", 32)
+        self.colors = ((192, 23, 96), (37, 89, 151), (54, 98, 65), (139, 88, 138))
 
 
 def play_music():
@@ -34,25 +39,31 @@ def play_music():
 
 
 def show_scores(data):
-    text = data.font.render(str(data.scores[0]), True, data.colors[0], (250, 237, 205))
-    textRect = text.get_rect()
-    textRect.center = (80, 320)
-    screen.blit(text, textRect)
-    text = data.font.render(str(data.scores[1]), True, data.colors[1], (250, 237, 205))
-    textRect = text.get_rect()
-    textRect.center = (720, 320)
-    screen.blit(text, textRect)
+    for player in list(range(data.num_of_players)):
+        text = font.render(str(data.scores[player]), True, data.colors[player], (250, 237, 205))
+        text_rect = text.get_rect()
+        text_rect.center = scores_pos[player]
+        screen.blit(text, text_rect)
+    text = font.render('TOP', True, data.colors[data.scores.index(max(data.scores))], (250, 237, 205))
+    text_rect = text.get_rect()
+    text_rect.center = (720, 270)
+    screen.blit(text, text_rect)
+    text = font1.render('P' + str(data.scores.index(max(data.scores)) + 1), True,
+                        data.colors[data.scores.index(max(data.scores))], (250, 237, 205))
+    text_rect = text.get_rect()
+    text_rect.center = (720, 320)
+    screen.blit(text, text_rect)
 
 
 def show_current_player(data):
-    text = data.font.render("P" + str(data.playing + 1), True, data.colors[data.playing], (250, 237, 205))
+    text = font.render('P' + str(data.playing + 1), True, data.colors[data.playing], (250, 237, 205))
     text_rect = text.get_rect()
     text_rect.center = (400, 60)
     screen.blit(text, text_rect)
 
 
 def player_change(data):
-    data.playing = (data.playing + 1) % 2
+    data.playing = (data.playing + 1) % data.num_of_players
 
 
 def check_horizontal(x, y, data):
@@ -243,52 +254,53 @@ def draw_structure():
             pygame.draw.circle(screen, (45, 45, 45), (i, j), 4, 0)
 
 
-def click_in_result():
-    left, middle, right = pygame.mouse.get_pressed()
-    if left:
-        x, y = pygame.mouse.get_pos()
-        if 270 < x < 530 and 455 < y < 505:
-            gameplay()
+def click_in_result(text_rect):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if text_rect.collidepoint(event.pos):
+                    menu()
+        pygame.display.update()
+        pygame.display.flip()
 
 
 def show_result(data):
-    screen.fill((250, 237, 205))
-    data.font = pygame.font.Font('freesansbold.ttf', 48)
+    text_rect = draw_result(data)
     running = True
     try:
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-            if data.scores[0] > data.scores[1]:
-                text = data.font.render('Player 1 is winner!', True, data.colors[0], (250, 237, 205))
-                text_rect = text.get_rect()
-                text_rect.center = (400, 160)
-                screen.blit(text, text_rect)
-            elif data.scores[1] > data.scores[0]:
-                text = data.font.render('Player 2 is winner!', True, data.colors[1], (250, 237, 205))
-                text_rect = text.get_rect()
-                text_rect.center = (400, 160)
-                screen.blit(text, text_rect)
-            else:
-                text = data.font.render('Match drawn', True, (0, 0, 0), (250, 237, 205))
-                text_rect = text.get_rect()
-                text_rect.center = (400, 160)
-                screen.blit(text, text_rect)
-            text = data.font.render('Play Again', True, (0, 0, 0), (150, 190, 205))
-            text_rect = text.get_rect()
-            text_rect.center = (400, 480)
-            screen.blit(text, text_rect)
-            click_in_result()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    click_in_result(text_rect)
             pygame.display.update()
             pygame.display.flip()
     except (KeyboardInterrupt, pygame.error):
         pass
 
 
-def gameplay():
-    play_music()
-    data = Data(k)
+def draw_result(data):
+    screen.fill((250, 237, 205))
+    if data.scores.count(max(data.scores)) == 1:
+        text = font1.render('Player ' + str(data.scores.index(max(data.scores)) + 1) + ' is winner!', True,
+                            data.colors[data.scores.index(max(data.scores))], (250, 237, 205))
+        text_rect = text.get_rect()
+        text_rect.center = (400, 160)
+        screen.blit(text, text_rect)
+    else:
+        text = font1.render('Match drawn', True, (0, 0, 0), (250, 237, 205))
+        text_rect = text.get_rect()
+        text_rect.center = (400, 160)
+        screen.blit(text, text_rect)
+    text = font.render('Main Menu', True, (0, 0, 0), (150, 190, 205))
+    text_rect2 = text.get_rect()
+    text_rect2.center = (400, 480)
+    screen.blit(text, text_rect2)
+    return text_rect2
+def gameplay(data):
     draw_structure()
     show_scores(data)
     running = True
@@ -310,4 +322,88 @@ def gameplay():
         pass
 
 
-gameplay()
+def draw_menu():
+    screen.fill((250, 237, 205))
+    img = pygame.image.load('Connect the Dots.png').convert_alpha()
+    img = pygame.transform.scale(img, (600, 400))
+    img_rect = img.get_rect()
+    img_rect.center = (400, 100)
+    screen.blit(img, img_rect)
+    text = font.render('Play Game', True, (250, 237, 205), (69, 117, 171))
+    text_rect = text.get_rect()
+    text_rect.center = (150, 220)
+    screen.blit(text, text_rect)
+    return text_rect
+
+
+def click_in_menu(text_rect):
+    try:
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if text_rect.collidepoint(event.pos):
+                        text_rect1, text_rect2, text_rect3 = draw_select_num_of_players()
+                        select_num_of_players(text_rect1, text_rect2, text_rect3)
+            pygame.display.update()
+            pygame.display.flip()
+    except (pygame.error, KeyboardInterrupt):
+        pass
+
+
+def draw_select_num_of_players():
+    text = font.render('2 Players', True, (250, 237, 205), (69, 117, 171))
+    text_rect1 = text.get_rect()
+    text_rect1.center = (650, 220)
+    screen.blit(text, text_rect1)
+    text = font.render('3 Players', True, (250, 237, 205), (69, 117, 171))
+    text_rect2 = text.get_rect()
+    text_rect2.center = (650, 320)
+    screen.blit(text, text_rect2)
+    text = font.render('4 Players', True, (250, 237, 205), (69, 117, 171))
+    text_rect3 = text.get_rect()
+    text_rect3.center = (650, 420)
+    screen.blit(text, text_rect3)
+    return text_rect1, text_rect2, text_rect3
+
+
+def select_num_of_players(text_rect1, text_rect2, text_rect3):
+    try:
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if text_rect1.collidepoint(event.pos):
+                        gameplay(Data(k, 2))
+                    elif text_rect2.collidepoint(event.pos):
+                        gameplay(Data(k, 3))
+                    elif text_rect3.collidepoint(event.pos):
+                        gameplay(Data(k, 4))
+            pygame.display.update()
+            pygame.display.flip()
+    except (pygame.error, KeyboardInterrupt):
+        pass
+
+
+def menu():
+    text_rect = draw_menu()
+    running = True
+    try:
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    pygame.quit()
+            click_in_menu(text_rect)
+            pygame.display.update()
+            pygame.display.flip()
+    except (pygame.error, KeyboardInterrupt):
+        pass
+
+
+clock = pygame.time.Clock()
+clock.tick(60)
+play_music()
+menu()
