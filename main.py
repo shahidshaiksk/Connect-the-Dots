@@ -1,5 +1,3 @@
-import sys
-
 import pygame
 import numpy
 
@@ -17,6 +15,7 @@ change = 400 // (k - 1)
 sensitivity = change // 5
 font = pygame.font.Font("freesansbold.ttf", 32)
 font1 = pygame.font.Font("freesansbold.ttf", 48)
+font2 = pygame.font.Font("freesansbold.ttf", 24)
 scores_pos = ((80, 230), (80, 290), (80, 350), (80, 410))
 
 
@@ -39,6 +38,10 @@ def play_music():
 
 
 def show_scores(data):
+    text = font2.render('Scoreboard', True, (117, 34, 34), (250, 237, 205))
+    text_rect = text.get_rect()
+    text_rect.center = (80, 170)
+    screen.blit(text, text_rect)
     for player in list(range(data.num_of_players)):
         text = font.render(str(data.scores[player]), True, data.colors[player], (250, 237, 205))
         text_rect = text.get_rect()
@@ -232,12 +235,14 @@ def click_vertical(x, y, data):
         return
 
 
-def click(data):
+def click(data, text_rect):
     left, middle, right = pygame.mouse.get_pressed()
     if left:
         x, y = pygame.mouse.get_pos()
         # print(x,y)
-        if (y - 120) % change <= sensitivity or (y - 120) % change >= change - sensitivity:
+        if text_rect.center[0] - text_rect.width//2 < x < text_rect.center[0] + text_rect.width//2 and text_rect.center[1] - text_rect.height//2 < y < text_rect.center[1] + text_rect.height//2:
+            menu()
+        elif (y - 120) % change <= sensitivity or (y - 120) % change >= change - sensitivity:
             click_horizontal(x, y, data)
         elif (x - 200) % change <= sensitivity or (x - 200) % change >= change - sensitivity:
             click_vertical(x, y, data)
@@ -245,6 +250,10 @@ def click(data):
 
 def draw_structure():
     screen.fill((250, 237, 205))
+    text = font2.render(' Main Menu ', True, (250, 237, 205), (117, 34, 34))
+    text_rect = text.get_rect()
+    text_rect.center = (700, 40)
+    screen.blit(text, text_rect)
     for i in range(120, 521, 400 // (k - 1)):
         pygame.draw.line(screen, (200, 200, 200), (200, i), (600, i), 3)
     for i in range(200, 601, 400 // (k - 1)):
@@ -252,18 +261,22 @@ def draw_structure():
     for i in range(200, 601, 400 // (k - 1)):
         for j in range(120, 521, 400 // (k - 1)):
             pygame.draw.circle(screen, (45, 45, 45), (i, j), 4, 0)
+    return text_rect
 
 
 def click_in_result(text_rect):
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if text_rect.collidepoint(event.pos):
-                    menu()
-        pygame.display.update()
-        pygame.display.flip()
+    try:
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if text_rect.collidepoint(event.pos):
+                        menu()
+            pygame.display.update()
+            pygame.display.flip()
+    except (KeyboardInterrupt, pygame.error):
+        pass
 
 
 def show_result(data):
@@ -295,13 +308,15 @@ def draw_result(data):
         text_rect = text.get_rect()
         text_rect.center = (400, 160)
         screen.blit(text, text_rect)
-    text = font.render('Main Menu', True, (0, 0, 0), (150, 190, 205))
+    text = font.render(' Main Menu ', True, (0, 0, 0), (150, 190, 205))
     text_rect2 = text.get_rect()
     text_rect2.center = (400, 480)
     screen.blit(text, text_rect2)
     return text_rect2
+
+
 def gameplay(data):
-    draw_structure()
+    main_menu_button = draw_structure()
     show_scores(data)
     running = True
     try:
@@ -312,7 +327,7 @@ def gameplay(data):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-            click(data)
+            click(data, main_menu_button)
             pygame.display.update()
             pygame.display.flip()
             if data.counter == 100:
@@ -329,7 +344,7 @@ def draw_menu():
     img_rect = img.get_rect()
     img_rect.center = (400, 100)
     screen.blit(img, img_rect)
-    text = font.render('Play Game', True, (250, 237, 205), (69, 117, 171))
+    text = font.render(' Play Game ', True, (250, 237, 205), (69, 117, 171))
     text_rect = text.get_rect()
     text_rect.center = (150, 220)
     screen.blit(text, text_rect)
@@ -353,17 +368,22 @@ def click_in_menu(text_rect):
 
 
 def draw_select_num_of_players():
-    text = font.render('2 Players', True, (250, 237, 205), (69, 117, 171))
+    screen.fill((250, 237, 205))
+    text = font1.render('Select number of players:', True, (69, 117, 171), (250, 237, 205))
+    text_rect = text.get_rect()
+    text_rect.center = (400, 280)
+    screen.blit(text, text_rect)
+    text = font.render(' 2 Players ', True, (250, 237, 205), (69, 117, 171))
     text_rect1 = text.get_rect()
-    text_rect1.center = (650, 220)
+    text_rect1.center = (200, 550)
     screen.blit(text, text_rect1)
-    text = font.render('3 Players', True, (250, 237, 205), (69, 117, 171))
+    text = font.render(' 3 Players ', True, (250, 237, 205), (69, 117, 171))
     text_rect2 = text.get_rect()
-    text_rect2.center = (650, 320)
+    text_rect2.center = (400, 550)
     screen.blit(text, text_rect2)
-    text = font.render('4 Players', True, (250, 237, 205), (69, 117, 171))
+    text = font.render(' 4 Players ', True, (250, 237, 205), (69, 117, 171))
     text_rect3 = text.get_rect()
-    text_rect3.center = (650, 420)
+    text_rect3.center = (600, 550)
     screen.blit(text, text_rect3)
     return text_rect1, text_rect2, text_rect3
 
